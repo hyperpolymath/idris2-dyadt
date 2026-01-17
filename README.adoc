@@ -1,0 +1,223 @@
+// SPDX-License-Identifier: MPL-2.0
+= idris2-dyadt
+
+image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
+image:https://img.shields.io/badge/Philosophy-Palimpsest-purple.svg[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-licence"]
+image:https://img.shields.io/badge/Idris2-0.6+-blue.svg[Idris2]
+image:https://img.shields.io/badge/Status-Scaffolding-yellow.svg[Status]
+
+**Did You Actually Do That? - Compile-Time Edition**
+
+Compile-time verified claims using Idris2's dependent type system. Where the Rust https://crates.io/crates/did-you-actually-do-that[did-you-actually-do-that] crate performs runtime verification, this library encodes claims as types, turning verification into type checking.
+
+== The Key Insight
+
+[cols="1,1"]
+|===
+|Runtime Verification (Rust) |Compile-Time Verification (Idris2)
+
+|`Claim` is data
+|`Claim` is a type
+
+|`Evidence` is data attached to claims
+|`Evidence claim` is a type indexed by the claim
+
+|`Verdict` is computed at runtime
+|If it compiles, it's verified
+
+|Errors found at runtime
+|Errors found at compile time
+|===
+
+== Quick Start
+
+[source,idris]
+----
+import Dyadt
+
+||| A claim that a config file exists - if this compiles, the file exists
+configExists : Verified (FileExists "config.toml")
+configExists = verify FileExistsEvidence
+
+||| Multiple claims combined
+projectReady : Verified (AllClaims [FileExists "Cargo.toml", GitClean Nothing])
+projectReady = verifyAll [FileExistsEvidence, GitCleanEvidence]
+
+||| Using combinators
+buildReady : Claim
+buildReady = file "Cargo.toml" `and` gitClean `and` cargoTest
+----
+
+== Installation
+
+[source,bash]
+----
+# Clone the repository
+git clone https://github.com/hyperpolymath/idris2-dyadt.git
+cd idris2-dyadt
+
+# Build and install
+idris2 --install idris2-dyadt.ipkg
+----
+
+== Claims as Types
+
+Every claim type from did-you-actually-do-that has a corresponding type in idris2-dyadt:
+
+[source,idris]
+----
+-- File claims
+FileExists : Path -> Claim
+FileWithHash : Path -> Hash -> Claim
+FileContains : Path -> String -> Claim
+FileMatchesRegex : Path -> Pattern -> Claim
+DirectoryExists : Path -> Claim
+
+-- Git claims
+GitClean : Maybe Path -> Claim
+GitCommitExists : GitRef -> Maybe Path -> Claim
+GitBranchExists : Branch -> Maybe Path -> Claim
+
+-- Command claims
+CommandSucceeds : Command -> List String -> Claim
+
+-- Environment claims
+EnvVarSet : EnvVar -> Claim
+EnvVarEquals : EnvVar -> String -> Claim
+
+-- Logical combinators
+And : Claim -> Claim -> Claim
+Or : Claim -> Claim -> Claim
+Not : Claim -> Claim
+AllClaims : List Claim -> Claim
+AnyClaim : List Claim -> Claim
+----
+
+== Evidence as Proofs
+
+Evidence is indexed by the claim it supports:
+
+[source,idris]
+----
+data Evidence : Claim -> Type where
+  FileExistsEvidence : Evidence (FileExists path)
+  FileHashEvidence : Evidence (FileWithHash path hash)
+  GitCleanEvidence : Evidence (GitClean repoPath)
+  CommandSucceedsEvidence : Evidence (CommandSucceeds cmd args)
+  EnvVarSetEvidence : Evidence (EnvVarSet name)
+
+  -- Combine evidence
+  BothEvidence : Evidence a -> Evidence b -> Evidence (And a b)
+  LeftEvidence : Evidence a -> Evidence (Or a b)
+  RightEvidence : Evidence b -> Evidence (Or a b)
+----
+
+== Combinator DSL
+
+[source,idris]
+----
+import Dyadt.Combinators
+
+-- Build complex claims
+myProject : Claim
+myProject = all
+  [ file "Cargo.toml"
+  , file "src/lib.rs"
+  , gitClean
+  , cargoTest
+  ]
+
+-- Using infix operators
+ready : Claim
+ready = file "config.toml" `and` envSet "API_KEY" `and` cmd "make test"
+
+-- Common patterns
+rustProjectReady : Claim
+rustProjectReady = rustProject `and` cargoTest `and` gitClean
+----
+
+== Ecosystem Integration
+
+idris2-dyadt is part of the hyperpolymath Idris2 verification stack:
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────┐
+│                    Your Application                          │
+└─────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+                          ┌─────────────┐
+                          │ idris2-dyadt │
+                          │  (claims)    │
+                          └─────────────┘
+                           │           │
+              ┌────────────┘           └────────────┐
+              ▼                                     ▼
+       ┌─────────────┐                       ┌─────────┐
+       │ idris2-     │                       │idris2-  │
+       │ echidna     │                       │  cno    │
+       │ (provers)   │                       │(CNOs)   │
+       └─────────────┘                       └─────────┘
+----
+
+=== With idris2-echidna (Theorem Proving)
+
+[source,idris]
+----
+import Dyadt
+import Dyadt.Integration.Echidna
+
+||| Prove a complex claim using theorem proving
+verifyComplex : Claim -> IO (Either ProverError (TheoremVerified claim))
+verifyComplex claim = do
+  let thm = encodeAsSMTLib claim
+  result <- verifyWithStrategy (MultiProver [Z3, CVC5]) thm
+  pure (toTheoremVerified result)
+----
+
+=== With idris2-cno (Certified Null Operations)
+
+[source,idris]
+----
+import Dyadt
+import Dyadt.Integration.CNO
+
+||| Claim that a CNO is valid
+cnoClaim : CNOClaim
+cnoClaim = IsCNO "myTransform"
+
+||| Verify the CNO claim
+verified : DyadtVerifiedCNO
+verified = verifyCNOClaim "myTransform" TypeLevelCNOProof
+----
+
+== Runtime Fallback
+
+For dynamic claims that cannot be verified at compile time:
+
+[source,idris]
+----
+import Dyadt.Verifier
+
+-- Runtime verification
+main : IO ()
+main = do
+  result <- verifyClaimRuntime (file "config.toml")
+  case result of
+    Confirmed _ => putStrLn "File exists!"
+    Refuted msg => putStrLn $ "Verification failed: " ++ msg
+    Inconclusive msg => putStrLn $ "Could not verify: " ++ msg
+----
+
+== Related Projects
+
+* https://crates.io/crates/did-you-actually-do-that[did-you-actually-do-that] - Runtime verification (Rust)
+* https://github.com/hyperpolymath/idris2-echidna[idris2-echidna] - ECHIDNA theorem prover bindings
+* https://github.com/hyperpolymath/idris2-cno[idris2-cno] - Certified Null Operations
+* https://github.com/hyperpolymath/llm-verify[llm-verify] - LLM verification (Haskell)
+* https://github.com/hyperpolymath/absolute-zero[absolute-zero] - Formal CNO proofs
+
+== License
+
+MPL-2.0. See link:LICENSE[LICENSE] for details.
