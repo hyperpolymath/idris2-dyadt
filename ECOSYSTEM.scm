@@ -1,88 +1,42 @@
-; SPDX-License-Identifier: MPL-2.0
-; ECOSYSTEM.scm - Project ecosystem positioning
+;; SPDX-License-Identifier: MPL-2.0
+;; ECOSYSTEM.scm - Ecosystem relationships for idris2-dyadt
 
 (ecosystem
-  (version "1.0")
+  (version "1.0.0")
   (name "idris2-dyadt")
   (type "library")
   (purpose "Compile-time verified claims using Idris2 dependent types")
 
   (position-in-ecosystem
-    "The compile-time counterpart to did-you-actually-do-that"
-    "Encodes verification in the type system rather than runtime"
-    "Central claims library for the hyperpolymath Idris2 verification stack"
-    "Provides the Claim → Evidence → Verified pattern as types")
-
-  (ecosystem-diagram
-    "
-    ┌─────────────────────────────────────────────────────────────┐
-    │                    User Applications                         │
-    └─────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-                          ┌─────────────┐
-                          │ idris2-dyadt │
-                          │  (claims)    │
-                          └─────────────┘
-                           │           │
-              ┌────────────┘           └────────────┐
-              ▼                                     ▼
-       ┌─────────────┐                       ┌─────────┐
-       │ idris2-     │                       │idris2-  │
-       │ echidna     │                       │  cno    │
-       │ (provers)   │                       │(CNOs)   │
-       └─────────────┘                       └─────────┘
-              │
-              ▼
-       ┌─────────────┐
-       │  ECHIDNA    │
-       │   (Rust)    │
-       └─────────────┘
-    ")
+    (role "integration-hub")
+    (layer "verification-framework")
+    (description "Provides claim/evidence types and integrates echidna + cno"))
 
   (related-projects
-    (did-you-actually-do-that
-      (relationship "runtime-counterpart")
-      (integration "Same claim patterns, different verification time")
-      (description "The Rust runtime verification library this is based on"))
-    (idris2-echidna
-      (relationship "verification-backend")
-      (integration "Dyadt.Integration.Echidna module")
-      (description "Theorem prover bindings for formal proofs"))
-    (idris2-cno
-      (relationship "downstream-consumer")
-      (integration "Dyadt.Integration.CNO module")
-      (description "CNO proofs that use verified claims"))
-    (llm-verify
-      (relationship "ecosystem-sibling")
-      (integration "Same conceptual model")
-      (description "Haskell LLM verification using same concepts"))
-    (absolute-zero
-      (relationship "theoretical-foundation")
-      (integration "CNO theory formalization")
-      (description "Formal verification theory this builds on")))
+    (project "idris2-echidna"
+      (relationship "dependency")
+      (description "Provides theorem prover backends for claim verification"))
 
-  (integration-points
-    (provides
-      "Claim type hierarchy for expressing what to verify"
-      "Evidence type family for proofs"
-      "Verified wrapper for verified claims"
-      "Combinator DSL for building complex claims"
-      "Runtime fallback verifier")
-    (consumes
-      "Echidna for theorem-proved claims"
-      "CNO library for CNO-related claims"))
+    (project "idris2-cno"
+      (relationship "dependency")
+      (description "Provides CNO identity proofs as dyadt evidence"))
+
+    (project "did-you-actually-do-that"
+      (relationship "inspiration")
+      (description "Original runtime claim verification library"))
+
+    (project "absolute-zero"
+      (relationship "sibling-standard")
+      (description "Formal verification methodology that dyadt implements")))
 
   (what-this-is
-    "Claims encoded as types (FileExists, GitClean, etc.)"
-    "Evidence as dependent type family indexed by claims"
-    "Compile-time verification via type checking"
-    "DSL for building complex claims (and, or, all, any)"
-    "Runtime fallback for dynamic verification"
-    "Integration layer with echidna and cno")
+    "Compile-time verified claims"
+    "Evidence as dependent type values"
+    "Integration point for echidna and cno"
+    "Type-safe claim verification framework")
 
   (what-this-is-not
-    "Not a runtime verification library (use did-you-actually-do-that)"
-    "Not a theorem prover (use echidna)"
-    "Not a general proof assistant"
-    "Not CNO-specific (use idris2-cno)"))
+    "Runtime-only verification"
+    "A testing framework"
+    "A replacement for formal proofs"
+    "Guaranteed to verify all claims (some need external provers)"))

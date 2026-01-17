@@ -1,104 +1,51 @@
-; SPDX-License-Identifier: MPL-2.0
-; META.scm - Project metadata and architectural decisions
+;; SPDX-License-Identifier: MPL-2.0
+;; META.scm - Meta-level information for idris2-dyadt
 
 (meta
-  (version "1.0")
-  (project "idris2-dyadt")
-
   (architecture-decisions
     (adr-001
+      (title "Claims as types, evidence as values")
       (status "accepted")
       (date "2025-01-17")
-      (title "Claims as data types, not GADTs")
-      (context "Need to represent claims at both type and value level")
-      (decision "Use a simple data type for Claim, with Evidence as GADT indexed by Claim")
+      (context "Need a way to express verifiable claims at the type level")
+      (decision "Model claims as Idris2 types and evidence as values of those types")
       (consequences
-        "Claims can be manipulated as values (combinators)"
-        "Evidence proves specific claims at type level"
-        "Show instance possible for claims"))
+        "Compile-time verification of claim satisfaction"
+        "Cannot construct evidence without proof"
+        "Dependent types required for full expressiveness"))
 
     (adr-002
+      (title "AllOf/AnyOf instead of All/Any")
       (status "accepted")
       (date "2025-01-17")
-      (title "Evidence as dependent type family")
-      (context "Evidence must be tied to specific claims")
-      (decision "Define Evidence : Claim -> Type with constructors for each claim type")
+      (context "Prelude exports All and Any which conflict with our types")
+      (decision "Name our evidence combinators AllOf and AnyOf")
       (consequences
-        "Type-safe evidence construction"
-        "Impossible to provide wrong evidence for a claim"
-        "Combinators compose evidence correctly"))
+        "Avoids namespace conflicts"
+        "Clear that these are dyadt-specific types"
+        "Slightly longer names"))
 
     (adr-003
+      (title "Integration via dependency, not circular")
       (status "accepted")
       (date "2025-01-17")
-      (title "Runtime verifier fallback")
-      (context "Some claims cannot be verified at compile time")
-      (decision "Provide runtime verifier that returns VerificationResult")
+      (context "Need to integrate with echidna and cno without circular dependencies")
+      (decision "dyadt depends on echidna and cno; they remain standalone")
       (consequences
-        "Gradual adoption - can start with runtime, migrate to compile-time"
-        "Dynamic claims still supported"
-        "Clear distinction between compile-time and runtime verification"))
-
-    (adr-004
-      (status "accepted")
-      (date "2025-01-17")
-      (title "Combinator DSL for claim construction")
-      (context "Users need to build complex claims from simple ones")
-      (decision "Provide combinator functions (file, dir, cmd, and, or, all, any)")
-      (consequences
-        "Familiar fluent API from did-you-actually-do-that"
-        "Easy to build complex claims"
-        "Infix operators for readability"))
-
-    (adr-005
-      (status "accepted")
-      (date "2025-01-17")
-      (title "Integration modules for ecosystem")
-      (context "Need to work with echidna and cno")
-      (decision "Create Integration.Echidna and Integration.CNO modules")
-      (consequences
-        "Clean separation of concerns"
-        "Optional dependencies"
-        "Easy to extend for future libraries")))
+        "Clean dependency graph"
+        "dyadt is the integration point"
+        "echidna and cno can be used independently")))
 
   (development-practices
-    (code-style
-      "Follow Idris2 standard naming conventions"
-      "Use total functions where possible (%default total)"
-      "Public exports explicit with 'public export'"
-      "Document all public functions with ||| comments")
-    (security
-      "Runtime verifier validates inputs"
-      "File operations sandboxed"
-      "Command execution requires explicit claim")
-    (testing
-      "Type-checking as primary test"
-      "Runtime verifier has unit tests"
-      "Integration tests with echidna")
-    (versioning "Semantic versioning (SemVer)")
-    (documentation
-      "README.adoc with quick start"
-      "Doc comments on all public APIs"
-      "Examples directory with working code")
-    (branching
-      "main is stable"
-      "feature/* for new features"
-      "fix/* for bug fixes"))
+    (code-style "Follow Idris2 community style guide")
+    (security "No unsafe operations in core modules")
+    (testing "Example-based testing with dependent types")
+    (versioning "Semantic versioning")
+    (documentation "Module-level doc comments with examples")
+    (branching "main for stable, feature/* for development"))
 
   (design-rationale
-    (why-dependent-types
-      "Encode proof obligations in types"
-      "Compile-time verification"
-      "Stronger guarantees than runtime")
-    (why-mirror-rust-api
-      "Familiar API for did-you-actually-do-that users"
-      "Conceptual consistency across languages"
-      "Easy migration path")
-    (why-combinators
-      "Build complex claims from simple ones"
-      "Composable and testable"
-      "Matches functional programming style")
-    (why-runtime-fallback
-      "Not everything can be checked at compile time"
-      "Gradual adoption"
-      "Dynamic configurations")))
+    (why-claims-as-types "Types are checked at compile time, catching errors early")
+    (why-evidence-as-values "Values must be constructed, proving claims are satisfied")
+    (why-integrate-echidna "External provers can verify complex claims")
+    (why-integrate-cno "CNOs provide identity proofs that become dyadt evidence")))
