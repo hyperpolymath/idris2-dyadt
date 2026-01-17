@@ -8,6 +8,11 @@ import Dyadt.Claim
 import Dyadt.Evidence
 import Dyadt.Verdict
 
+-- Import from idris2-echidna
+import Echidna
+import Echidna.Prover
+import Echidna.Prover.Z3
+
 -- Not marked total due to Evidence module constraints
 
 -------------------------------------------------------------------
