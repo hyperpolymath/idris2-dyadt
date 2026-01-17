@@ -109,6 +109,103 @@ idris2 --install idris2-dyadt/idris2-dyadt.ipkg
 * `idris2-echidna` (for prover integration)
 * `idris2-cno` (for CNO integration)
 
+== API Reference
+
+=== Creating Claims
+
+[source,idris]
+----
+import Dyadt.Claim
+
+-- File claims
+c1 : Claim
+c1 = FileExists "/etc/passwd"
+
+c2 : Claim
+c2 = FileWithHash "config.json" "sha256:abc..."
+
+c3 : Claim
+c3 = FileContains "README.md" "## Installation"
+
+-- Git claims
+c4 : Claim
+c4 = GitClean Nothing  -- Current repo
+
+c5 : Claim
+c5 = GitBranchExists "main" (Just "/path/to/repo")
+
+-- Environment claims
+c6 : Claim
+c6 = EnvVarSet "DATABASE_URL"
+
+c7 : Claim
+c7 = EnvVarEquals "NODE_ENV" "production"
+----
+
+=== Building Evidence
+
+[source,idris]
+----
+import Dyadt.Evidence
+
+-- Simple evidence
+ev1 : Evidence (FileExists "/etc/passwd")
+ev1 = FileExistsEvidence
+
+-- Combined evidence
+ev2 : Evidence (And (FileExists "a") (FileExists "b"))
+ev2 = BothEvidence FileExistsEvidence FileExistsEvidence
+
+-- Either evidence
+ev3 : Evidence (Or (FileExists "a") (FileExists "b"))
+ev3 = LeftEvidence FileExistsEvidence  -- or RightEvidence
+
+-- List evidence
+ev4 : AllOf Evidence [FileExists "a", FileExists "b"]
+ev4 = AllCons FileExistsEvidence (AllCons FileExistsEvidence AllNil)
+----
+
+=== Verification
+
+[source,idris]
+----
+import Dyadt
+
+-- Verify a claim (if this compiles, claim is true)
+v1 : Verified (FileExists "/etc/hosts")
+v1 = verify FileExistsEvidence
+
+-- Verify multiple claims
+v2 : Verified (AllClaims [FileExists "a", FileExists "b"])
+v2 = verifyAll (AllCons FileExistsEvidence (AllCons FileExistsEvidence AllNil))
+
+-- Combine verifications
+v3 : Verified (And (FileExists "a") (FileExists "b"))
+v3 = both (verify FileExistsEvidence) (verify FileExistsEvidence)
+
+-- Chain verification
+v4 : Verified (FileExists "f") -> Verified (DirectoryExists "d")
+v4 vFile = chain vFile (\_ => DirectoryExistsEvidence)
+----
+
+=== Using Combinators
+
+[source,idris]
+----
+import Dyadt.Combinators
+
+-- Infix operators
+ready : Claim
+ready = file "a" `and` file "b" `or` gitClean
+
+-- Common patterns
+rust : Claim
+rust = rustProject `and` cargoTest
+
+node : Claim
+node = nodeProject `and` npmTest
+----
+
 == Claims as Types
 
 Every claim type from did-you-actually-do-that has a corresponding type in idris2-dyadt:
