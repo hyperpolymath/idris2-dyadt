@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: MPL-2.0
+name: Idris2 CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install Idris2 and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y idris2
+          # Install dependencies from GitHub
+          git clone --depth 1 https://github.com/hyperpolymath/idris2-echidna.git /tmp/idris2-echidna
+          git clone --depth 1 https://github.com/hyperpolymath/idris2-cno.git /tmp/idris2-cno
+          cd /tmp/idris2-echidna && idris2 --install idris2-echidna.ipkg
+          cd /tmp/idris2-cno && idris2 --install idris2-cno.ipkg
+
+      - name: Typecheck package
+        run: idris2 --typecheck idris2-dyadt.ipkg
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install Idris2 and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y idris2
+          git clone --depth 1 https://github.com/hyperpolymath/idris2-echidna.git /tmp/idris2-echidna
+          git clone --depth 1 https://github.com/hyperpolymath/idris2-cno.git /tmp/idris2-cno
+          cd /tmp/idris2-echidna && idris2 --install idris2-echidna.ipkg
+          cd /tmp/idris2-cno && idris2 --install idris2-cno.ipkg
+
+      - name: Build package
+        run: idris2 --build idris2-dyadt.ipkg
