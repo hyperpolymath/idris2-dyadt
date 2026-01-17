@@ -19,28 +19,37 @@
       (paradigm "dependently-typed functional")))
 
   (current-position
-    (phase "initial-release")
-    (overall-completion 80)
+    (phase "v0.1.0-released")
+    (overall-completion 90)
     (components
-      (claim-types 95 "Claim data type with rich constructors")
-      (evidence-types 90 "AllOf/AnyOf evidence combinators")
-      (verdict-types 85 "Verified/Contested verdict types")
-      (verifier 80 "Claim verification infrastructure")
-      (combinators 85 "Claim combination utilities")
-      (echidna-integration 90 "Integration with idris2-echidna")
-      (cno-integration 90 "Integration with idris2-cno"))
+      (claim-types 98 "Claim data type with rich constructors")
+      (evidence-types 95 "AllOf/AnyOf evidence combinators")
+      (verdict-types 90 "Verified/Contested verdict types")
+      (verifier 85 "Claim verification infrastructure")
+      (combinators 90 "Claim combination utilities")
+      (echidna-integration 95 "Integration with idris2-echidna")
+      (cno-integration 95 "Integration with idris2-cno")
+      (examples 95 "Comprehensive claim verification examples")
+      (tests 95 "TestClaims.idr with compile-time proofs")
+      (documentation 95 "README with API reference, pack.toml"))
     (working-features
       "Claims as dependent types"
       "Evidence as proof terms"
       "Compile-time claim verification"
       "AllOf/AnyOf evidence combinators"
       "Integration with echidna provers"
-      "Integration with CNO identity proofs"))
+      "Integration with CNO identity proofs"
+      "Deployment pipeline examples"
+      "Pack package manager support"))
 
   (route-to-mvp
     (milestone "v0.1.0 - Core Types" (status "complete"))
     (milestone "v0.2.0 - Integrations" (status "complete"))
-    (milestone "v0.3.0 - Runtime Verification" (status "in-progress"))
+    (milestone "v0.3.0 - Runtime Verification" (status "in-progress")
+      (items
+        "Dynamic claim verification"
+        "External evidence loading"
+        "Hybrid compile/runtime verification"))
     (milestone "v1.0.0 - Production Ready" (status "planned")))
 
   (blockers-and-issues
@@ -48,14 +57,23 @@
     (low "More claim types could be added"))
 
   (critical-next-actions
-    (immediate "Add more example claims")
-    (this-week "Improve documentation")
-    (this-month "Register with pack"))
+    (immediate "Add fuzzing tests")
+    (this-week "Implement runtime verification fallback")
+    (this-month "Submit to pack-db"))
 
   (session-history
-    (snapshot "2025-01-17"
+    (snapshot "2025-01-17T12:00"
       (accomplishments
         "Initial scaffolding complete"
         "8 modules compile cleanly"
         "Cross-library integration working"
-        "Pushed to GitHub"))))
+        "Pushed to GitHub"))
+    (snapshot "2025-01-17T18:00"
+      (accomplishments
+        "Added TestClaims.idr with evidence construction tests"
+        "Created Examples.idr with deployment pipeline patterns"
+        "Added pack.toml with dependency specifications"
+        "Expanded README with installation and API docs"
+        "Added security workflows (CodeQL, Scorecard)"
+        "Enabled branch protection"
+        "Set up mirror workflows for GitLab/Bitbucket"))))
