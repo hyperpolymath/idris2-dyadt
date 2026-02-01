@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: MPL-2.0
+;; SPDX-License-Identifier: PMPL-1.0-or-later
 ;; AGENTIC.scm - AI agent gating policies for idris2-dyadt
 
 (define-module (idris2-dyadt agentic)

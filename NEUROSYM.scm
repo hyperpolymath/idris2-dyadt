@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: MPL-2.0
+;; SPDX-License-Identifier: PMPL-1.0-or-later
 ;; NEUROSYM.scm - Symbolic semantics for idris2-dyadt
 
 (define-module (idris2-dyadt neurosym)
